@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.21005.1
+VisualStudioVersion = 12.0.30324.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "StormLib", "StormLib", "{4AE095C9-98B2-4DFC-923D-AE41CB960E5D}"
 	ProjectSection(SolutionItems) = preProject
@@ -30,6 +30,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "x64-dbg", "x64-dbg", "{BD23
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StormLibSharp", "StormLibSharp\StormLibSharp.csproj", "{D0139C61-6BA0-4F07-B1E8-551023CD2624}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestConsole", "TestConsole\TestConsole.csproj", "{5A5F9099-49A3-4DB0-8FE5-F88C46590DB3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -40,6 +42,10 @@ Global
 		{D0139C61-6BA0-4F07-B1E8-551023CD2624}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D0139C61-6BA0-4F07-B1E8-551023CD2624}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D0139C61-6BA0-4F07-B1E8-551023CD2624}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5A5F9099-49A3-4DB0-8FE5-F88C46590DB3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5A5F9099-49A3-4DB0-8FE5-F88C46590DB3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5A5F9099-49A3-4DB0-8FE5-F88C46590DB3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5A5F9099-49A3-4DB0-8FE5-F88C46590DB3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

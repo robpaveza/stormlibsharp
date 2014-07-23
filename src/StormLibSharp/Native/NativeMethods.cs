@@ -22,8 +22,8 @@ namespace StormLibSharp.Native
         public static extern bool SFileOpenArchive(
             [MarshalAs(UnmanagedType.LPTStr)] string szMpqName,
             uint dwPriority,
-            uint dwFlags,
-            out IntPtr phMpq
+            SFileOpenArchiveFlags dwFlags,
+            out MpqArchiveSafeHandle phMpq
             );
 
         [DllImport(STORMLIB, CallingConvention = CallingConvention.Winapi, ExactSpelling = true, PreserveSig = true, SetLastError = true, ThrowOnUnmappableChar = false)]
@@ -31,34 +31,37 @@ namespace StormLibSharp.Native
             [MarshalAs(UnmanagedType.LPTStr)] string szMpqName,
             uint dwCreateFlags,
             uint dwMaxFileCount,
-            out IntPtr phMpq
+            out MpqArchiveSafeHandle phMpq
             );
 
         [DllImport(STORMLIB, CallingConvention = CallingConvention.Winapi, ExactSpelling = true, PreserveSig = true, SetLastError = true, ThrowOnUnmappableChar = false)]
         public static extern bool SFileCreateArchive2(
             [MarshalAs(UnmanagedType.LPTStr)] string szMpqName,
             ref SFILE_CREATE_MPQ pCreateInfo,
-            out IntPtr phMpq
+            out MpqArchiveSafeHandle phMpq
             );
 
         [DllImport(STORMLIB, CallingConvention = CallingConvention.Winapi, ExactSpelling = true, PreserveSig = true, SetLastError = true, ThrowOnUnmappableChar = false)]
         public static extern bool SFileSetDownloadCallback(
-            IntPtr hMpq,
+            MpqArchiveSafeHandle hMpq,
             [MarshalAs(UnmanagedType.FunctionPtr)] SFILE_DOWNLOAD_CALLBACK pfnCallback,
             IntPtr pvUserData
             );
 
         [DllImport(STORMLIB, CallingConvention = CallingConvention.Winapi, ExactSpelling = true, PreserveSig = true, SetLastError = true, ThrowOnUnmappableChar = false)]
-        public static extern bool SFileFlushArchive(IntPtr hMpq);
+        public static extern bool SFileFlushArchive(MpqArchiveSafeHandle hMpq);
 
         [DllImport(STORMLIB, CallingConvention = CallingConvention.Winapi, ExactSpelling = true, PreserveSig = true, SetLastError = true, ThrowOnUnmappableChar = false)]
         public static extern bool SFileCloseArchive(IntPtr hMpq);
+
+        [DllImport(STORMLIB, CallingConvention = CallingConvention.Winapi, ExactSpelling = true, PreserveSig = true, SetLastError = true, ThrowOnUnmappableChar = false)]
+        public static extern bool SFileCloseArchive(MpqArchiveSafeHandle hMpq);
         #endregion
 
         #region Adds another listfile into MPQ.
         [DllImport(STORMLIB, CallingConvention = CallingConvention.Winapi, ExactSpelling = true, PreserveSig = true, SetLastError = true, ThrowOnUnmappableChar = false)]
         public static extern int SFileAddListFile(
-            IntPtr hMpq,
+            MpqArchiveSafeHandle hMpq,
             [MarshalAs(UnmanagedType.LPStr)] string szListFile
             );
         #endregion
@@ -66,14 +69,14 @@ namespace StormLibSharp.Native
         #region Archive compacting
         [DllImport(STORMLIB, CallingConvention = CallingConvention.Winapi, ExactSpelling = true, PreserveSig = true, SetLastError = true, ThrowOnUnmappableChar = false)]
         public static extern bool SFileSetCompactCallback(
-            IntPtr hMpq,
+            MpqArchiveSafeHandle hMpq,
             SFILE_COMPACT_CALLBACK compactCB,
             IntPtr pvUserData
             );
 
         [DllImport(STORMLIB, CallingConvention = CallingConvention.Winapi, ExactSpelling = true, PreserveSig = true, SetLastError = true, ThrowOnUnmappableChar = false)]
         public static extern bool SFileCompactArchive(
-            IntPtr hMpq,
+            MpqArchiveSafeHandle hMpq,
             [MarshalAs(UnmanagedType.LPStr)] string szListFile,
             bool bReserved
             );
@@ -81,22 +84,22 @@ namespace StormLibSharp.Native
 
         #region Maximum file count
         [DllImport(STORMLIB, CallingConvention = CallingConvention.Winapi, ExactSpelling = true, PreserveSig = true, SetLastError = true, ThrowOnUnmappableChar = false)]
-        public static extern uint SFileGetMaxFileCount(IntPtr hMpq);
+        public static extern uint SFileGetMaxFileCount(MpqArchiveSafeHandle hMpq);
 
         [DllImport(STORMLIB, CallingConvention = CallingConvention.Winapi, ExactSpelling = true, PreserveSig = true, SetLastError = true, ThrowOnUnmappableChar = false)]
-        public static extern bool SFileSetMaxFileCount(IntPtr hMpq, uint dwMaxFileCount);
+        public static extern bool SFileSetMaxFileCount(MpqArchiveSafeHandle hMpq, uint dwMaxFileCount);
         #endregion
 
         #region Changing (attributes) file
         [DllImport(STORMLIB, CallingConvention = CallingConvention.Winapi, ExactSpelling = true, PreserveSig = true, SetLastError = true, ThrowOnUnmappableChar = false)]
-        public static extern uint SFileGetAttributes(IntPtr hMpq);
+        public static extern uint SFileGetAttributes(MpqArchiveSafeHandle hMpq);
 
         [DllImport(STORMLIB, CallingConvention = CallingConvention.Winapi, ExactSpelling = true, PreserveSig = true, SetLastError = true, ThrowOnUnmappableChar = false)]
-        public static extern bool SFileSetAttributes(IntPtr hMpq, uint dwFlags);
+        public static extern bool SFileSetAttributes(MpqArchiveSafeHandle hMpq, uint dwFlags);
 
         [DllImport(STORMLIB, CallingConvention = CallingConvention.Winapi, ExactSpelling = true, PreserveSig = true, SetLastError = true, ThrowOnUnmappableChar = false)]
         public static extern bool SFileUpdateFileAttributes(
-            IntPtr hMpq,
+            MpqArchiveSafeHandle hMpq,
             [MarshalAs(UnmanagedType.LPStr)] string szFileName
             );
         #endregion
@@ -104,53 +107,80 @@ namespace StormLibSharp.Native
         #region Functions for manipulation with patch archives
         [DllImport(STORMLIB, CallingConvention = CallingConvention.Winapi, ExactSpelling = true, PreserveSig = true, SetLastError = true, ThrowOnUnmappableChar = false)]
         public static extern bool SFileOpenPatchArchive(
-            IntPtr hMpq,
+            MpqArchiveSafeHandle hMpq,
             [MarshalAs(UnmanagedType.LPTStr)] string szPatchMpqName,
             [MarshalAs(UnmanagedType.LPStr)] string szPatchPathPrefix,
             uint dwFlags
             );
 
         [DllImport(STORMLIB, CallingConvention = CallingConvention.Winapi, ExactSpelling = true, PreserveSig = true, SetLastError = true, ThrowOnUnmappableChar = false)]
-        public static extern bool SFileIsPatchedArchive(IntPtr hMpq);
+        public static extern bool SFileIsPatchedArchive(MpqArchiveSafeHandle hMpq);
         #endregion
 
         #region Functions for file manipulation
         [DllImport(STORMLIB, CallingConvention = CallingConvention.Winapi, ExactSpelling = true, PreserveSig = true, SetLastError = true, ThrowOnUnmappableChar = false)]
         public static extern bool SFileHasFile(
-            IntPtr hMpq,
+            MpqArchiveSafeHandle hMpq,
             [MarshalAs(UnmanagedType.LPStr)] string szFileName
             );
 
         [DllImport(STORMLIB, CallingConvention = CallingConvention.Winapi, ExactSpelling = true, PreserveSig = true, SetLastError = true, ThrowOnUnmappableChar = false)]
         public static extern bool SFileOpenFileEx(
-            IntPtr hMpq,
+            MpqArchiveSafeHandle hMpq,
             [MarshalAs(UnmanagedType.LPStr)] string szFileName,
             uint dwSearchScope,
-            out IntPtr phFile
+            out MpqFileSafeHandle phFile
             );
 
         [DllImport(STORMLIB, CallingConvention = CallingConvention.Winapi, ExactSpelling = true, PreserveSig = true, SetLastError = true, ThrowOnUnmappableChar = false)]
-        public static extern uint SFileGetFileSize(IntPtr hFile, ref uint pdwFileSizeHigh);
+        public static extern uint SFileGetFileSize(MpqFileSafeHandle hFile, ref uint pdwFileSizeHigh);
+
+        public static unsafe uint SFileGetFilePointer(
+            MpqFileSafeHandle hFile
+            )
+        {
+            if (hFile.IsInvalid || hFile.IsClosed)
+                throw new InvalidOperationException();
+
+            IntPtr handle = hFile.DangerousGetHandle();
+            _TMPQFileHeader* header = (_TMPQFileHeader*)handle.ToPointer();
+            return header->dwFilePos;
+        }
+
+        //public static unsafe uint SFileGetFileSize(
+        //    MpqFileSafeHandle hFile
+        //    )
+        //{
+        //    if (hFile.IsInvalid || hFile.IsClosed)
+        //        throw new InvalidOperationException();
+
+        //    IntPtr handle = hFile.DangerousGetHandle();
+        //    _TMPQFileHeader* header = (_TMPQFileHeader*)handle.ToPointer();
+        //    return header->pFileEntry->dwFileSize;
+        //}
 
         [DllImport(STORMLIB, CallingConvention = CallingConvention.Winapi, ExactSpelling = true, PreserveSig = true, SetLastError = true, ThrowOnUnmappableChar = false)]
         public static extern uint SFileSetFilePointer(
-            IntPtr hFile,
-            int lFilePos,
-            ref int plFilePosHigh,
+            MpqFileSafeHandle hFile,
+            uint lFilePos,
+            ref uint plFilePosHigh,
             uint dwMoveMethod
             );
 
         [DllImport(STORMLIB, CallingConvention = CallingConvention.Winapi, ExactSpelling = true, PreserveSig = true, SetLastError = true, ThrowOnUnmappableChar = false)]
         public static extern bool SFileReadFile(
-            IntPtr hFile,
+            MpqFileSafeHandle hFile,
             IntPtr lpBuffer,
             uint dwToRead,
             out uint pdwRead,
-            out System.Threading.NativeOverlapped lpOverlapped
+            ref System.Threading.NativeOverlapped lpOverlapped
             );
 
         [DllImport(STORMLIB, CallingConvention = CallingConvention.Winapi, ExactSpelling = true, PreserveSig = true, SetLastError = true, ThrowOnUnmappableChar = false)]
         public static extern bool SFileCloseFile(IntPtr hFile);
+
+        [DllImport(STORMLIB, CallingConvention = CallingConvention.Winapi, ExactSpelling = true, PreserveSig = true, SetLastError = true, ThrowOnUnmappableChar = false)]
+        public static extern bool SFileCloseFile(MpqFileSafeHandle hFile);
 
         #region Retrieving info about a file in the archive
         [DllImport(STORMLIB, CallingConvention = CallingConvention.Winapi, ExactSpelling = true, PreserveSig = true, SetLastError = true, ThrowOnUnmappableChar = false)]
@@ -163,8 +193,26 @@ namespace StormLibSharp.Native
             );
 
         [DllImport(STORMLIB, CallingConvention = CallingConvention.Winapi, ExactSpelling = true, PreserveSig = true, SetLastError = true, ThrowOnUnmappableChar = false)]
+        public static extern bool SFileGetFileInfo(
+            MpqArchiveSafeHandle hMpqOrFile,
+            SFileInfoClass InfoClass,
+            IntPtr pvFileInfo,
+            uint cbFileInfoSize,
+            out uint pcbLengthNeeded
+            );
+
+        [DllImport(STORMLIB, CallingConvention = CallingConvention.Winapi, ExactSpelling = true, PreserveSig = true, SetLastError = true, ThrowOnUnmappableChar = false)]
+        public static extern bool SFileGetFileInfo(
+            MpqFileSafeHandle hMpqOrFile,
+            SFileInfoClass InfoClass,
+            IntPtr pvFileInfo,
+            uint cbFileInfoSize,
+            out uint pcbLengthNeeded
+            );
+
+        [DllImport(STORMLIB, CallingConvention = CallingConvention.Winapi, ExactSpelling = true, PreserveSig = true, SetLastError = true, ThrowOnUnmappableChar = false)]
         public static extern bool SFileGetFileName(
-            IntPtr hFile,
+            MpqFileSafeHandle hFile,
             [MarshalAs(UnmanagedType.LPStr)] out string szFileName
             );
 
@@ -177,7 +225,7 @@ namespace StormLibSharp.Native
 
         [DllImport(STORMLIB, CallingConvention = CallingConvention.Winapi, ExactSpelling = true, PreserveSig = true, SetLastError = true, ThrowOnUnmappableChar = false)]
         public static extern bool SFileExtractFile(
-            IntPtr hMpq,
+            MpqArchiveSafeHandle hMpq,
             [MarshalAs(UnmanagedType.LPStr)] string szToExtract,
             [MarshalAs(UnmanagedType.LPTStr)] string szExtracted,
             uint dwSearchScope
@@ -188,7 +236,7 @@ namespace StormLibSharp.Native
         #region Functions for file and archive verification
         [DllImport(STORMLIB, CallingConvention = CallingConvention.Winapi, ExactSpelling = true, PreserveSig = true, SetLastError = true, ThrowOnUnmappableChar = false)]
         public static extern bool SFileGetFileChecksums(
-            IntPtr hMpq,
+            MpqArchiveSafeHandle hMpq,
             [MarshalAs(UnmanagedType.LPStr)] string szFileName,
             out uint pdwCrc32,
             IntPtr pMD5
@@ -196,26 +244,26 @@ namespace StormLibSharp.Native
 
         [DllImport(STORMLIB, CallingConvention = CallingConvention.Winapi, ExactSpelling = true, PreserveSig = true, SetLastError = true, ThrowOnUnmappableChar = false)]
         public static extern uint SFileVerifyFile(
-            IntPtr hMpq,
+            MpqArchiveSafeHandle hMpq,
             [MarshalAs(UnmanagedType.LPStr)] string szFileName,
             uint dwFlags
             );
 
         [DllImport(STORMLIB, CallingConvention = CallingConvention.Winapi, ExactSpelling = true, PreserveSig = true, SetLastError = true, ThrowOnUnmappableChar = false)]
         public static extern int SFileVerifyRawData(
-            IntPtr hMpq,
+            MpqArchiveSafeHandle hMpq,
             uint dwWhatToVerify,
             [MarshalAs(UnmanagedType.LPStr)] string szFileName
             );
 
         [DllImport(STORMLIB, CallingConvention = CallingConvention.Winapi, ExactSpelling = true, PreserveSig = true, SetLastError = true, ThrowOnUnmappableChar = false)]
-        public static extern uint SFileVerifyArchive(IntPtr hMpq);
+        public static extern uint SFileVerifyArchive(MpqArchiveSafeHandle hMpq);
         #endregion
 
         #region Functions for file searching
         [DllImport(STORMLIB, CallingConvention = CallingConvention.Winapi, ExactSpelling = true, PreserveSig = true, SetLastError = true, ThrowOnUnmappableChar = false)]
         public static extern IntPtr SFileFindFirstFile(
-            IntPtr hMpq,
+            MpqArchiveSafeHandle hMpq,
             [MarshalAs(UnmanagedType.LPStr)] string szMask,
             out _SFILE_FIND_DATA lpFindFileData,
             [MarshalAs(UnmanagedType.LPStr)] string szListFile
@@ -232,7 +280,7 @@ namespace StormLibSharp.Native
 
         [DllImport(STORMLIB, CallingConvention = CallingConvention.Winapi, ExactSpelling = true, PreserveSig = true, SetLastError = true, ThrowOnUnmappableChar = false)]
         public static extern IntPtr SListFileFindFirstFile(
-            IntPtr hMpq,
+            MpqArchiveSafeHandle hMpq,
             [MarshalAs(UnmanagedType.LPStr)] string szListFile,
             [MarshalAs(UnmanagedType.LPStr)] string szMask,
             [In, Out] ref _SFILE_FIND_DATA lpFindFileData
@@ -251,7 +299,7 @@ namespace StormLibSharp.Native
         #region Locale support
         [DllImport(STORMLIB, CallingConvention = CallingConvention.Winapi, ExactSpelling = true, PreserveSig = true, SetLastError = true, ThrowOnUnmappableChar = false)]
         public static extern int SFileEnumLocales(
-            IntPtr hMpq,
+            MpqArchiveSafeHandle hMpq,
             [MarshalAs(UnmanagedType.LPStr)] string szFileName,
             IntPtr plcLocales,
             ref uint pdwMaxLocales,
@@ -262,7 +310,7 @@ namespace StormLibSharp.Native
         #region Support for adding files to the MPQ
         [DllImport(STORMLIB, CallingConvention = CallingConvention.Winapi, ExactSpelling = true, PreserveSig = true, SetLastError = true, ThrowOnUnmappableChar = false)]
         public static extern bool SFileCreateFile(
-            IntPtr hMpq,
+            MpqArchiveSafeHandle hMpq,
             [MarshalAs(UnmanagedType.LPStr)] string szArchiveName,
             ulong fileTime,
             uint dwFileSize,
@@ -273,18 +321,18 @@ namespace StormLibSharp.Native
 
         [DllImport(STORMLIB, CallingConvention = CallingConvention.Winapi, ExactSpelling = true, PreserveSig = true, SetLastError = true, ThrowOnUnmappableChar = false)]
         public static extern bool SFileWriteFile(
-            IntPtr hFile,
+            MpqFileSafeHandle hFile,
             IntPtr pvData,
             uint dwSize,
             uint dwCompression
             );
 
         [DllImport(STORMLIB, CallingConvention = CallingConvention.Winapi, ExactSpelling = true, PreserveSig = true, SetLastError = true, ThrowOnUnmappableChar = false)]
-        public static extern bool SFileFinishFile(IntPtr hFile);
+        public static extern bool SFileFinishFile(MpqFileSafeHandle hFile);
 
         [DllImport(STORMLIB, CallingConvention = CallingConvention.Winapi, ExactSpelling = true, PreserveSig = true, SetLastError = true, ThrowOnUnmappableChar = false)]
         public static extern bool SFileAddFileEx(
-            IntPtr hMpq,
+            MpqArchiveSafeHandle hMpq,
             [MarshalAs(UnmanagedType.LPTStr)] string szFileName,
             [MarshalAs(UnmanagedType.LPStr)] string szArchivedName,
             uint dwFlags,
@@ -294,7 +342,7 @@ namespace StormLibSharp.Native
 
         [DllImport(STORMLIB, CallingConvention = CallingConvention.Winapi, ExactSpelling = true, PreserveSig = true, SetLastError = true, ThrowOnUnmappableChar = false)]
         public static extern bool SFileAddFile(
-            IntPtr hMpq,
+            MpqArchiveSafeHandle hMpq,
             [MarshalAs(UnmanagedType.LPTStr)] string szFileName,
             [MarshalAs(UnmanagedType.LPStr)] string szArchivedName,
             uint dwFlags
@@ -302,7 +350,7 @@ namespace StormLibSharp.Native
 
         [DllImport(STORMLIB, CallingConvention = CallingConvention.Winapi, ExactSpelling = true, PreserveSig = true, SetLastError = true, ThrowOnUnmappableChar = false)]
         public static extern bool SFileAddWave(
-            IntPtr hMpq,
+            MpqArchiveSafeHandle hMpq,
             [MarshalAs(UnmanagedType.LPTStr)] string szFileName,
             [MarshalAs(UnmanagedType.LPStr)] string szArchivedName,
             uint dwFlags,
@@ -311,21 +359,21 @@ namespace StormLibSharp.Native
 
         [DllImport(STORMLIB, CallingConvention = CallingConvention.Winapi, ExactSpelling = true, PreserveSig = true, SetLastError = true, ThrowOnUnmappableChar = false)]
         public static extern bool SFileRemoveFile(
-            IntPtr hMpq,
+            MpqArchiveSafeHandle hMpq,
             [MarshalAs(UnmanagedType.LPStr)] string szFileName,
             uint dwSearchScope
             );
 
         [DllImport(STORMLIB, CallingConvention = CallingConvention.Winapi, ExactSpelling = true, PreserveSig = true, SetLastError = true, ThrowOnUnmappableChar = false)]
         public static extern bool SFileRenameFile(
-            IntPtr hMpq,
+            MpqArchiveSafeHandle hMpq,
             [MarshalAs(UnmanagedType.LPStr)] string szOldFileName,
             [MarshalAs(UnmanagedType.LPStr)] string szNewFileName
             );
 
         [DllImport(STORMLIB, CallingConvention = CallingConvention.Winapi, ExactSpelling = true, PreserveSig = true, SetLastError = true, ThrowOnUnmappableChar = false)]
         public static extern bool SFileSetFileLocale(
-            IntPtr hFile,
+            MpqFileSafeHandle hFile,
             uint lcNewLocale
             );
 
@@ -334,7 +382,7 @@ namespace StormLibSharp.Native
 
         [DllImport(STORMLIB, CallingConvention = CallingConvention.Winapi, ExactSpelling = true, PreserveSig = true, SetLastError = true, ThrowOnUnmappableChar = false)]
         public static extern bool SFileSetAddFileCallback(
-            IntPtr hMpq,
+            MpqArchiveSafeHandle hMpq,
             SFILE_ADDFILE_CALLBACK AddFileCB,
             IntPtr pvUserData
             );
@@ -417,6 +465,32 @@ namespace StormLibSharp.Native
         public uint dwFileTimeLo;                          // Low 32-bits of the file time (0 if not present)
         public uint dwFileTimeHi;                          // High 32-bits of the file time (0 if not present)
         public uint lcLocale;                              // Locale version
+    }
+
+    internal unsafe struct _TFileEntry
+    {
+        public ulong FileNameHash;
+        public ulong ByteOffset;
+        public ulong FileTime;
+        public uint dwHashIndex;
+        public uint dwFileSize;
+        public uint dwCmpSize;
+        public uint dwFlags;
+        public ushort lcLocale;
+        public ushort wPlatform;
+        public uint dwCrc32;
+        public fixed byte md5[16];
+        public IntPtr szFileName;
+    }
+
+    // Provides enough of _TMPQFile to get to the file size and current position.
+    internal unsafe struct _TMPQFileHeader
+    {
+        public IntPtr pStream;
+        public IntPtr ha;
+        public _TFileEntry* pFileEntry;
+        public uint dwFileKey;
+        public uint dwFilePos;
     }
 #pragma warning restore 0169,0649
 

@@ -9,6 +9,16 @@ namespace StormLibSharp
 
     public class MpqArchiveCompactingEventArgs : EventArgs
     {
+        internal MpqArchiveCompactingEventArgs(uint dwWorkType, ulong processed, ulong total)
+        {
+            unchecked
+            {
+                WorkType = (MpqCompactingWorkType)dwWorkType;
+                BytesProcessed = (long)processed;
+                TotalBytes = (long)total;
+            }
+        }
+
         public MpqCompactingWorkType WorkType
         {
             get;

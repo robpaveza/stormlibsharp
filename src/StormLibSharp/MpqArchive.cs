@@ -1,96 +1,208 @@
-﻿using System;
+﻿using StormLibSharp.Native;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.IO.MemoryMappedFiles;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace StormLibSharp
 {
     public class MpqArchive : IDisposable
     {
+        private MpqArchiveSafeHandle _handle;
+        private List<MpqFileStream> _openFiles = new List<MpqFileStream>();
+        private FileAccess _accessType;
+        private List<MpqArchiveCompactingEventHandler> _compactCallbacks = new List<MpqArchiveCompactingEventHandler>();
+        private SFILE_COMPACT_CALLBACK _compactCallback;
+
         #region Constructors / Factories
         public MpqArchive(string filePath, FileAccess accessType)
         {
-            throw new NotImplementedException();
+            _accessType = accessType;
+            SFileOpenArchiveFlags flags = SFileOpenArchiveFlags.TypeIsFile;
+            if (accessType == FileAccess.Read)
+                flags |= SFileOpenArchiveFlags.AccessReadOnly;
+            else
+                flags |= SFileOpenArchiveFlags.AccessReadWriteShare;
+
+            // constant 2 = SFILE_OPEN_HARD_DISK_FILE
+            if (!NativeMethods.SFileOpenArchive(filePath, 2, flags, out _handle))
+                throw new Win32Exception(); // Implicitly calls GetLastError
         }
 
         public MpqArchive(MemoryMappedFile file, FileAccess accessType)
         {
-            throw new NotImplementedException();
+            _accessType = accessType;
+            string fileName = Win32Methods.GetFileNameOfMemoryMappedFile(file);
+            if (fileName == null)
+                throw new ArgumentException("Could not retrieve the name of the file to initialize.");
+
+            SFileOpenArchiveFlags flags = SFileOpenArchiveFlags.TypeIsMemoryMapped;
+            if (accessType == FileAccess.Read)
+                flags |= SFileOpenArchiveFlags.AccessReadOnly;
+            else
+                flags |= SFileOpenArchiveFlags.AccessReadWriteShare;
+
+            // constant 2 = SFILE_OPEN_HARD_DISK_FILE
+            if (!NativeMethods.SFileOpenArchive(fileName, 2, flags, out _handle))
+                throw new Win32Exception(); // Implicitly calls GetLastError
+        }
+
+        private MpqArchive(string filePath, MpqArchiveVersion version, MpqFileStreamAttributes listfileAttributes, MpqFileStreamAttributes attributesFileAttributes, int maxFileCount)
+        {
+            if (maxFileCount < 0)
+                throw new ArgumentException("maxFileCount");
+
+            SFileOpenArchiveFlags flags = SFileOpenArchiveFlags.TypeIsFile | SFileOpenArchiveFlags.AccessReadWriteShare;
+            flags |= (SFileOpenArchiveFlags)version;
+
+            //SFILE_CREATE_MPQ create = new SFILE_CREATE_MPQ()
+            //{
+            //    cbSize = unchecked((uint)Marshal.SizeOf(typeof(SFILE_CREATE_MPQ))),
+            //    dwMaxFileCount = unchecked((uint)maxFileCount),
+            //    dwMpqVersion = (uint)version,
+            //    dwFileFlags1 = (uint)listfileAttributes,
+            //    dwFileFlags2 = (uint)attributesFileAttributes,
+            //    dwStreamFlags = (uint)flags,
+            //};
+
+            //if (!NativeMethods.SFileCreateArchive2(filePath, ref create, out _handle))
+            //    throw new Win32Exception();
+            if (!NativeMethods.SFileCreateArchive(filePath, (uint)flags, int.MaxValue, out _handle))
+                throw new Win32Exception();
         }
 
         public static MpqArchive CreateNew(string mpqPath, MpqArchiveVersion version)
         {
-            throw new NotImplementedException();
+            return CreateNew(mpqPath, version, MpqFileStreamAttributes.None, MpqFileStreamAttributes.None, int.MaxValue);
         }
 
         public static MpqArchive CreateNew(string mpqPath, MpqArchiveVersion version, MpqFileStreamAttributes listfileAttributes,
             MpqFileStreamAttributes attributesFileAttributes, int maxFileCount)
         {
-            throw new NotImplementedException();
+            return new MpqArchive(mpqPath, version, listfileAttributes, attributesFileAttributes, maxFileCount);
         }
         #endregion
 
         #region Properties
-        public int Locale
+        // TODO: Move to common location.
+        // This is a global setting, not per-archive setting.
+
+        //public int Locale
+        //{
+        //    get
+        //    {
+        //        throw new NotImplementedException();
+        //    }
+        //    set
+        //    {
+        //        throw new NotImplementedException();
+        //    }
+        //}
+
+        public long MaxFileCount
         {
             get
             {
-                throw new NotImplementedException();
+                VerifyHandle();
+                return NativeMethods.SFileGetMaxFileCount(_handle);
             }
             set
             {
-                throw new NotImplementedException();
+                if (value < 0 || value > uint.MaxValue)
+                    throw new ArgumentException("value");
+                VerifyHandle();
+
+                if (!NativeMethods.SFileSetMaxFileCount(_handle, unchecked((uint)value)))
+                    throw new Win32Exception();
             }
         }
 
-        public int MaxFileCount
+        private void VerifyHandle()
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
+            if (_handle == null || _handle.IsInvalid)
+                throw new ObjectDisposedException("MpqArchive");
         }
 
         public bool IsPatchedArchive
         {
             get
             {
-                throw new NotImplementedException();
+                VerifyHandle();
+                return NativeMethods.SFileIsPatchedArchive(_handle);
             }
         }
         #endregion
 
         public void Flush()
         {
-            throw new NotImplementedException();
+            VerifyHandle();
+            if (!NativeMethods.SFileFlushArchive(_handle))
+                throw new Win32Exception();
         }
 
-        public void AddListFile(string listfileContents)
+        public int AddListFile(string listfileContents)
         {
-            throw new NotImplementedException();
+            VerifyHandle();
+            return NativeMethods.SFileAddListFile(_handle, listfileContents);
+        }
+
+        public void AddFileFromDisk(string filePath, string archiveName)
+        {
+            VerifyHandle();
+
+            if (!NativeMethods.SFileAddFile(_handle, filePath, archiveName, 0))
+                throw new Win32Exception();
         }
 
         public void Compact(string listfile)
         {
-            throw new NotImplementedException();
+            VerifyHandle();
+            if (!NativeMethods.SFileCompactArchive(_handle, listfile, false))
+                throw new Win32Exception();
+        }
+
+        private void _OnCompact(IntPtr pvUserData, uint dwWorkType, ulong bytesProcessed, ulong totalBytes)
+        {
+            MpqArchiveCompactingEventArgs args = new MpqArchiveCompactingEventArgs(dwWorkType, bytesProcessed, totalBytes);
+            OnCompacting(args);
+        }
+
+        protected virtual void OnCompacting(MpqArchiveCompactingEventArgs e)
+        {
+            foreach (var cb in _compactCallbacks)
+            {
+                cb(this, e);
+            }
         }
 
         public event MpqArchiveCompactingEventHandler Compacting
         {
             add
             {
-                throw new NotImplementedException();
+                VerifyHandle();
+                _compactCallback = _OnCompact;
+                if (!NativeMethods.SFileSetCompactCallback(_handle, _compactCallback, IntPtr.Zero))
+                    throw new Win32Exception();
+
+                _compactCallbacks.Add(value);
             }
             remove
             {
-                throw new NotImplementedException();
+                _compactCallbacks.Remove(value);
+
+                VerifyHandle();
+                if (_compactCallbacks.Count == 0)
+                {
+                    if (!NativeMethods.SFileSetCompactCallback(_handle, null, IntPtr.Zero))
+                    {
+                        // Don't do anything here.  Remove shouldn't fail hard.
+                    }
+                }
             }
         }
 
@@ -99,42 +211,70 @@ namespace StormLibSharp
 
         public void AddPatchArchive(string patchPath)
         {
-            throw new NotImplementedException();
+            VerifyHandle();
+
+            if (!NativeMethods.SFileOpenPatchArchive(_handle, patchPath, null, 0))
+                throw new Win32Exception();
         }
 
         public void AddPatchArchives(IEnumerable<string> patchPaths)
         {
-            throw new NotImplementedException();
+            if (patchPaths == null)
+                throw new ArgumentNullException("patchPaths");
+
+            VerifyHandle();
+
+            foreach (string path in patchPaths)
+            {
+                // Don't sublet to AddPatchArchive to avoid having to repeatedly call VerifyHandle()
+                if (!NativeMethods.SFileOpenPatchArchive(_handle, path, null, 0))
+                    throw new Win32Exception();
+            }
         }
 
         public bool HasFile(string fileToFind)
         {
-            throw new NotImplementedException();
+            VerifyHandle();
+
+            return NativeMethods.SFileHasFile(_handle, fileToFind);
         }
 
         public MpqFileStream OpenFile(string fileName)
         {
-            throw new NotImplementedException();
+            VerifyHandle();
+
+            MpqFileSafeHandle fileHandle;
+            if (!NativeMethods.SFileOpenFileEx(_handle, fileName, 0, out fileHandle))
+                throw new Win32Exception();
+
+            MpqFileStream fs = new MpqFileStream(fileHandle, _accessType, this);
+            _openFiles.Add(fs);
+            return fs;
         }
 
         public void ExtractFile(string fileToExtract, string destinationPath)
         {
-            throw new NotImplementedException();
+            VerifyHandle();
+
+            if (!NativeMethods.SFileExtractFile(_handle, fileToExtract, destinationPath, 0))
+                throw new Win32Exception();
         }
 
-        public bool VerifyFile(string fileToVerify)
+        public MpqFileVerificationResults VerifyFile(string fileToVerify)
         {
-            throw new NotImplementedException();
+            VerifyHandle();
+
+            return (MpqFileVerificationResults)NativeMethods.SFileVerifyFile(_handle, fileToVerify, 0);
         }
 
         // TODO: Consider SFileVerifyRawData
 
-        public bool VerifyArchive()
+        public MpqArchiveVerificationResult VerifyArchive()
         {
-            throw new NotImplementedException();
+            VerifyHandle();
+
+            return (MpqArchiveVerificationResult)NativeMethods.SFileVerifyArchive(_handle);
         }
-
-
 
 
         #region IDisposable implementation
@@ -152,8 +292,30 @@ namespace StormLibSharp
         {
             if (disposing)
             {
+                // Release owned files first.
+                if (_openFiles != null)
+                {
+                    foreach (var file in _openFiles)
+                    {
+                        file.Dispose();
+                    }
+
+                    _openFiles.Clear();
+                    _openFiles = null;
+                }
+
                 // Release
+                if (_handle != null && !_handle.IsInvalid)
+                {
+                    _handle.Close();
+                    _handle = null;
+                }
             }
+        }
+
+        internal void RemoveOwnedFile(MpqFileStream file)
+        {
+            _openFiles.Remove(file);
         }
 
         #endregion
@@ -173,5 +335,80 @@ namespace StormLibSharp
         None = 0x0,
     }
 
-    
+    [Flags]
+    public enum MpqFileVerificationResults
+    {
+        /// <summary>
+        /// There were no errors with the file.
+        /// </summary>
+        Verified = 0,
+        /// <summary>
+        /// Failed to open the file
+        /// </summary>
+        Error = 0x1,
+        /// <summary>
+        /// Failed to read all data from the file
+        /// </summary>
+        ReadError = 0x2,
+        /// <summary>
+        /// File has sector CRC
+        /// </summary>
+        HasSectorCrc = 0x4,
+        /// <summary>
+        /// Sector CRC check failed
+        /// </summary>
+        SectorCrcError = 0x8,
+        /// <summary>
+        /// File has CRC32
+        /// </summary>
+        HasChecksum = 0x10,
+        /// <summary>
+        /// CRC32 check failed
+        /// </summary>
+        ChecksumError = 0x20,
+        /// <summary>
+        /// File has data MD5
+        /// </summary>
+        HasMd5 = 0x40,
+        /// <summary>
+        /// MD5 check failed
+        /// </summary>
+        Md5Error = 0x80,
+        /// <summary>
+        /// File has raw data MD5
+        /// </summary>
+        HasRawMd5 = 0x100,
+        /// <summary>
+        /// Raw MD5 check failed
+        /// </summary>
+        RawMd5Error = 0x200,
+    }
+
+    public enum MpqArchiveVerificationResult
+    {
+        /// <summary>
+        /// There is no signature in the MPQ
+        /// </summary>
+        NoSignature = 0,
+        /// <summary>
+        /// There was an error during verifying signature (like no memory)
+        /// </summary>
+        VerificationFailed = 1,
+        /// <summary>
+        /// There is a weak signature and sign check passed
+        /// </summary>
+        WeakSignatureVerified = 2,
+        /// <summary>
+        /// There is a weak signature but sign check failed
+        /// </summary>
+        WeakSignatureFailed = 3,
+        /// <summary>
+        /// There is a strong signature and sign check passed
+        /// </summary>
+        StrongSignatureVerified = 4,
+        /// <summary>
+        /// There is a strong signature but sign check failed
+        /// </summary>
+        StrongSignatureFailed = 5,
+    }
 }
