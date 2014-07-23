@@ -1,0 +1,53 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.21005.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StormLibSharp", "StormLibSharp.csproj", "{D0139C61-6BA0-4F07-B1E8-551023CD2624}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "StormLib", "StormLib", "{4AE095C9-98B2-4DFC-923D-AE41CB960E5D}"
+	ProjectSection(SolutionItems) = preProject
+		..\..\lib\StormLib.h = ..\..\lib\StormLib.h
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "x86-rel", "x86-rel", "{DFD95B66-651C-44B1-B16F-6176EA0A2494}"
+	ProjectSection(SolutionItems) = preProject
+		..\..\lib\x86\rel\StormLib.dll = ..\..\lib\x86\rel\StormLib.dll
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "x86-dbg", "x86-dbg", "{E5E6C754-C5A2-4DD5-81F8-842317F29E9A}"
+	ProjectSection(SolutionItems) = preProject
+		..\..\lib\x86\debug\StormLib.dll = ..\..\lib\x86\debug\StormLib.dll
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "x64-rel", "x64-rel", "{6A7E62DC-0B13-4405-9B66-B36BE056F168}"
+	ProjectSection(SolutionItems) = preProject
+		..\..\lib\x64\rel\StormLib.dll = ..\..\lib\x64\rel\StormLib.dll
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "x64-dbg", "x64-dbg", "{BD23D3E5-FFEA-4A81-8174-E9E1FEC4F3AB}"
+	ProjectSection(SolutionItems) = preProject
+		..\..\lib\x64\debug\StormLib.dll = ..\..\lib\x64\debug\StormLib.dll
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D0139C61-6BA0-4F07-B1E8-551023CD2624}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D0139C61-6BA0-4F07-B1E8-551023CD2624}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D0139C61-6BA0-4F07-B1E8-551023CD2624}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D0139C61-6BA0-4F07-B1E8-551023CD2624}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{DFD95B66-651C-44B1-B16F-6176EA0A2494} = {4AE095C9-98B2-4DFC-923D-AE41CB960E5D}
+		{E5E6C754-C5A2-4DD5-81F8-842317F29E9A} = {4AE095C9-98B2-4DFC-923D-AE41CB960E5D}
+		{6A7E62DC-0B13-4405-9B66-B36BE056F168} = {4AE095C9-98B2-4DFC-923D-AE41CB960E5D}
+		{BD23D3E5-FFEA-4A81-8174-E9E1FEC4F3AB} = {4AE095C9-98B2-4DFC-923D-AE41CB960E5D}
+	EndGlobalSection
+EndGlobal
