@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -13,7 +14,7 @@ namespace CascLibSharp
 
         public CascStorageContext(string dataPath)
         {
-            if (!NativeMethods.CascOpenStorage(dataPath, 0, out _handle))
+            if (!NativeMethods.CascOpenStorage(dataPath, 0, out _handle) || _handle.IsInvalid)
                 throw new CascException();
         }
 
@@ -29,9 +30,24 @@ namespace CascLibSharp
             return new CascFileStream(hFile);
         }
 
-        public IEnumerable<CascFoundFile> SearchFiles(string mask, string listFile)
+        public IEnumerable<CascFoundFile> SearchFiles(string mask, string listFilePath = null)
         {
-            yield break;
+            if (_handle == null || _handle.IsInvalid)
+                throw new ObjectDisposedException("CascStorageContext");
+
+            CascFindData cfd = new CascFindData();
+            using (var handle = NativeMethods.CascFindFirstFile(_handle, mask, ref cfd, listFilePath))
+            {
+                if (handle.IsInvalid)
+                    yield break;
+
+                yield return cfd.ToFoundFile();
+
+                while (NativeMethods.CascFindNextFile(handle, ref cfd))
+                {
+                    yield return cfd.ToFoundFile();
+                }
+            }
         }
 
         #region IDisposable implementation

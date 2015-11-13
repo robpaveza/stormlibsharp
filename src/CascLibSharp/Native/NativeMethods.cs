@@ -16,7 +16,13 @@ namespace CascLibSharp.Native
             uint dwFlags,
             out CascStorageSafeHandle phStorage);
 
-        // TODO: CascGetStorageInfo
+        [DllImport("CascLib", CallingConvention = CallingConvention.Winapi, ExactSpelling = true, SetLastError = true)]
+        public static extern bool CascGetStorageInfo(
+            CascStorageSafeHandle hStorage,
+            CascStorageInfoClass infoClass,
+            IntPtr pvStorageInfo,
+            IntPtr cbStorageInfo,
+            ref IntPtr pcbLengthNeeded);
         
         [DllImport("CascLib", CallingConvention = CallingConvention.Winapi, ExactSpelling = true, SetLastError = true)]
         public static extern bool CascCloseStorage(IntPtr hStorage);
@@ -110,6 +116,8 @@ namespace CascLibSharp.Native
     {
         FileCount,
         Features,
+        GameInfo,
+        GameBuild,
     }
 
 #pragma warning disable 649
@@ -125,11 +133,27 @@ namespace CascLibSharp.Native
 
         public fixed byte szFileName[MAX_PATH];
         public IntPtr szPlainName;
-        public ulong FileNameHash;
+        //public ulong FileNameHash;
         public fixed byte EncodingKey[16];
-        public uint dwPackageIndex;
+        //public uint dwPackageIndex;
         public uint dwLocaleFlags;
         public uint dwFileSize;
+
+        public unsafe CascFoundFile ToFoundFile()
+        {
+            string fileName = null;
+            fixed (void* pFileName = szFileName)
+            {
+                fileName = Marshal.PtrToStringAnsi(new IntPtr(pFileName));
+            }
+            byte[] encodingKey = new byte[16];
+            fixed (void* pEncodingKey = EncodingKey)
+            {
+                Marshal.Copy(new IntPtr(pEncodingKey), encodingKey, 0, 16);
+            }
+
+            return new CascFoundFile(fileName, encodingKey, (CascLocales)dwLocaleFlags, dwFileSize);
+        }
     }
 #pragma warning restore 649
 }
