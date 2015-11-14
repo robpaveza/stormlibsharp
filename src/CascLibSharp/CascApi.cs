@@ -172,11 +172,11 @@ namespace CascLibSharp
             string build = "fre";
 #endif
 
-            string mainPath = Path.Combine(directory, build, arch, "CascLib.dll");
+            string mainPath = Path.Combine(directory, "CascLib", build, arch, "CascLib.dll");
             if (File.Exists(mainPath))
                 return FromFile(mainPath);
 
-            string alternatePath = Path.Combine(directory, arch, "CascLib.dll");
+            string alternatePath = Path.Combine(directory, "CascLib", arch, "CascLib.dll");
             if (File.Exists(mainPath))
                 return FromFile(alternatePath);
 

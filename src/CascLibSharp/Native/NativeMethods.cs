@@ -43,6 +43,7 @@ namespace CascLibSharp.Native
         Wow6 = 0x00020000,
         Diablo3 = 0x00030000,
         Overwatch = 0x00040000,
+        Starcraft2 = 0x00050000,
     }
 
     internal static class GameConverterExtensions
@@ -53,6 +54,7 @@ namespace CascLibSharp.Native
             { CascGameId.Wow6, CascKnownClient.WorldOfWarcraft },
             { CascGameId.Diablo3, CascKnownClient.Diablo3 },
             { CascGameId.Overwatch, CascKnownClient.Overwatch },
+            { CascGameId.Starcraft2, CascKnownClient.Starcraft2 },
         };
 
         private static Dictionary<CascKnownClient, CascGameId> ClientGameMap = new Dictionary<CascKnownClient, CascGameId>() 
@@ -61,6 +63,7 @@ namespace CascLibSharp.Native
             { CascKnownClient.WorldOfWarcraft, CascGameId.Wow6 },
             { CascKnownClient.Diablo3, CascGameId.Diablo3 },
             { CascKnownClient.Overwatch, CascGameId.Overwatch },
+            { CascKnownClient.Starcraft2, CascGameId.Starcraft2 },
         };
 
         public static CascKnownClient ToKnownClient(this CascGameId gameId)
@@ -101,7 +104,7 @@ namespace CascLibSharp.Native
         public uint dwLocaleFlags;
         public uint dwFileSize;
 
-        public unsafe CascFoundFile ToFoundFile()
+        public unsafe CascFoundFile ToFoundFile(CascStorageContext ownerContext)
         {
             string fileName = null;
             fixed (void* pFileName = szFileName)
@@ -114,7 +117,7 @@ namespace CascLibSharp.Native
                 Marshal.Copy(new IntPtr(pEncodingKey), encodingKey, 0, 16);
             }
 
-            return new CascFoundFile(fileName, szPlainName, encodingKey, (CascLocales)dwLocaleFlags, dwFileSize);
+            return new CascFoundFile(fileName, szPlainName, encodingKey, (CascLocales)dwLocaleFlags, dwFileSize, ownerContext);
         }
     }
 #pragma warning restore 649

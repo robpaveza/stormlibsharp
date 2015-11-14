@@ -33,6 +33,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -66,15 +67,20 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-  <ItemGroup>
-    <None Include="CascLib.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="CascLib_dll.pdb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>rd /s /q $(ProjectDir)$(OutDir)CascLib
+md $(ProjectDir)$(OutDir)CascLib\dbg
+md $(ProjectDir)$(OutDir)CascLib\dbg\x86
+md $(ProjectDir)$(OutDir)CascLib\dbg\x64
+md $(ProjectDir)$(OutDir)CascLib\fre
+md $(ProjectDir)$(OutDir)CascLib\fre\x86
+md $(ProjectDir)$(OutDir)CascLib\fre\x64
+copy $(SolutionDir)..\lib\x86\debug\CascLib.dll $(ProjectDir)$(OutDir)CascLib\dbg\x86
+copy $(SolutionDir)..\lib\x64\debug\CascLib.dll $(ProjectDir)$(OutDir)CascLib\dbg\x64
+copy $(SolutionDir)..\lib\x86\rel\CascLib.dll $(ProjectDir)$(OutDir)CascLib\fre\x86
+copy $(SolutionDir)..\lib\x64\rel\CascLib.dll $(ProjectDir)$(OutDir)CascLib\fre\x64</PostBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
