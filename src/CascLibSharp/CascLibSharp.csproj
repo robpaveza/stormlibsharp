@@ -41,6 +41,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CascApi.cs" />
     <Compile Include="CascException.cs" />
     <Compile Include="CascFileStream.cs" />
     <Compile Include="CascFoundFile.cs" />
@@ -48,6 +49,7 @@
     <Compile Include="Native\CascFileEnumerationSafeHandle.cs" />
     <Compile Include="Native\CascStorageFileSafeHandle.cs" />
     <Compile Include="Native\CascStorageSafeHandle.cs" />
+    <Compile Include="Native\CoTaskMem.cs" />
     <Compile Include="Native\NativeMethods.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

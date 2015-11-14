@@ -19,7 +19,14 @@ namespace CascLibSharp.Native
 
         protected override bool ReleaseHandle()
         {
-            return NativeMethods.CascFindClose(DangerousGetHandle());
+            var api = Api ?? CascApi.Instance;
+            return api.CascFindClose(DangerousGetHandle());
+        }
+
+        internal CascApi Api
+        {
+            get;
+            set;
         }
     }
 }

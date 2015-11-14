@@ -12,12 +12,15 @@ namespace CascLibSharp
     public class CascFileStream : Stream
     {
         private CascStorageFileSafeHandle _handle;
+        private CascApi _api;
 
-        internal CascFileStream(CascStorageFileSafeHandle handle)
+        internal CascFileStream(CascStorageFileSafeHandle handle, CascApi api)
         {
             Debug.Assert(handle != null);
             Debug.Assert(!handle.IsInvalid);
+            Debug.Assert(api != null);
 
+            _api = api;
             _handle = handle;
         }
 
@@ -52,7 +55,7 @@ namespace CascLibSharp
             get 
             {
                 AssertValidHandle();
-                return NativeMethods.CascGetFileSize(_handle); 
+                return _api.CascGetFileSize(_handle); 
             }
         }
 
@@ -61,12 +64,12 @@ namespace CascLibSharp
             get
             {
                 AssertValidHandle();
-                return NativeMethods.CascSetFilePointer(_handle, 0, SeekOrigin.Current);
+                return _api.CascSetFilePointer(_handle, 0, SeekOrigin.Current);
             }
             set
             {
                 AssertValidHandle();
-                NativeMethods.CascSetFilePointer(_handle, value, SeekOrigin.Begin);
+                _api.CascSetFilePointer(_handle, value, SeekOrigin.Begin);
             }
         }
 
@@ -84,7 +87,7 @@ namespace CascLibSharp
             uint read = 0;
             fixed (byte* pBuffer = &buffer[0])
             {
-                if (!NativeMethods.CascReadFile(_handle, new IntPtr((void*)pBuffer), unchecked((uint)count), out read))
+                if (!_api.CascReadFile(_handle, new IntPtr((void*)pBuffer), unchecked((uint)count), out read))
                     throw new CascException();
             }
 
@@ -94,7 +97,7 @@ namespace CascLibSharp
         public override long Seek(long offset, SeekOrigin origin)
         {
             AssertValidHandle();
-            return NativeMethods.CascSetFilePointer(_handle, offset, origin);
+            return _api.CascSetFilePointer(_handle, offset, origin);
         }
 
         public override void SetLength(long value)

@@ -10,106 +10,11 @@ namespace CascLibSharp.Native
 {
     internal static class NativeMethods
     {
-        [DllImport("CascLib", CallingConvention = CallingConvention.Winapi, ExactSpelling = true, SetLastError = true)]
-        public static extern bool CascOpenStorage(
-            [MarshalAs(UnmanagedType.LPTStr)] string szDataPath,
-            uint dwFlags,
-            out CascStorageSafeHandle phStorage);
+        [DllImport("kernel32", SetLastError = true)]
+        public static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
 
-        [DllImport("CascLib", CallingConvention = CallingConvention.Winapi, ExactSpelling = true, SetLastError = true)]
-        public static extern bool CascGetStorageInfo(
-            CascStorageSafeHandle hStorage,
-            CascStorageInfoClass infoClass,
-            IntPtr pvStorageInfo,
-            IntPtr cbStorageInfo,
-            ref IntPtr pcbLengthNeeded);
-        
-        [DllImport("CascLib", CallingConvention = CallingConvention.Winapi, ExactSpelling = true, SetLastError = true)]
-        public static extern bool CascCloseStorage(IntPtr hStorage);
-
-        [DllImport("CascLib", CallingConvention = CallingConvention.Winapi, ExactSpelling = true, SetLastError = true)]
-        public static extern bool CascOpenFileByIndexKey(
-            CascStorageSafeHandle hStorage,
-            ref QueryKey pIndexKey,
-            uint dwFlags,
-            out CascStorageFileSafeHandle phFile);
-
-        [DllImport("CascLib", CallingConvention = CallingConvention.Winapi, ExactSpelling = true, SetLastError = true)]
-        public static extern bool CascOpenFileByEncodingKey(
-            CascStorageSafeHandle hStorage,
-            ref QueryKey pEncodingKey,
-            uint dwFlags,
-            out CascStorageFileSafeHandle phFile);
-
-        [DllImport("CascLib", CallingConvention = CallingConvention.Winapi, ExactSpelling = true, SetLastError = true)]
-        public static extern bool CascOpenFile(
-            CascStorageSafeHandle hStorage,
-            [MarshalAs(UnmanagedType.LPStr)] string szFileName,
-            uint dwLocale,
-            uint dwFlags,
-            out CascStorageFileSafeHandle phFile);
-
-        [DllImport("CascLib", CallingConvention = CallingConvention.Winapi, ExactSpelling = true, SetLastError = true)]
-        public static extern uint CascGetFileSize(
-            CascStorageFileSafeHandle hFile,
-            out uint pdwFileSizeHigh);
-
-        public static long CascGetFileSize(CascStorageFileSafeHandle hFile)
-        {
-            uint high;
-            uint low = CascGetFileSize(hFile, out high);
-            long result = (high << 32) | low;
-            return result;
-        }
-        
-        [DllImport("CascLib", CallingConvention = CallingConvention.Winapi, ExactSpelling = true, SetLastError = true)]
-        public static extern uint CascSetFilePointer(
-            CascStorageFileSafeHandle hFile,
-            uint lFilePos,
-            ref uint plFilePosHigh,
-            SeekOrigin dwMoveMethod);
-
-        public static long CascSetFilePointer(
-            CascStorageFileSafeHandle hFile,
-            long filePos,
-            SeekOrigin moveMethod)
-        {
-            uint low, high;
-            unchecked
-            {
-                low = (uint)(filePos & 0xffffffff);
-                high = (uint)(((ulong)filePos & 0xffffffff00000000) >> 32);
-            }
-            low = CascSetFilePointer(hFile, low, ref high, moveMethod);
-
-            long result = (high << 32) | low;
-            return result;
-        }
-
-        [DllImport("CascLib", CallingConvention = CallingConvention.Winapi, ExactSpelling = true, SetLastError = true)]
-        public static extern bool CascReadFile(
-            CascStorageFileSafeHandle hFile,
-            IntPtr lpBuffer,
-            uint dwToRead,
-            out uint dwRead);
-
-        [DllImport("CascLib", CallingConvention = CallingConvention.Winapi, ExactSpelling = true, SetLastError = true)]
-        public static extern bool CascCloseFile(IntPtr hFile);
-
-        [DllImport("CascLib", CallingConvention = CallingConvention.Winapi, ExactSpelling = true, SetLastError = true)]
-        public static extern CascFileEnumerationSafeHandle CascFindFirstFile(
-            CascStorageSafeHandle hStorage,
-            [MarshalAs(UnmanagedType.LPStr)] string szMask,
-            ref CascFindData pFindData,
-            [MarshalAs(UnmanagedType.LPTStr)] string szListFile);
-
-        [DllImport("CascLib", CallingConvention = CallingConvention.Winapi, ExactSpelling = true, SetLastError = true)]
-        public static extern bool CascFindNextFile(
-            CascFileEnumerationSafeHandle hFind,
-            ref CascFindData pFindData);
-
-        [DllImport("CascLib", CallingConvention = CallingConvention.Winapi, ExactSpelling = true, SetLastError = true)]
-        public static extern bool CascFindClose(IntPtr hFind);
+        [DllImport("kernel32", SetLastError = true)]
+        public static extern IntPtr LoadLibraryEx(string lpFileName, IntPtr hFile, uint dwFlags);
     }
 
     internal enum CascStorageInfoClass
@@ -118,6 +23,63 @@ namespace CascLibSharp.Native
         Features,
         GameInfo,
         GameBuild,
+    }
+
+    internal enum CascStorageFeatures
+    {
+        None = 0x0,
+        HasListfile = 0x1,
+    }
+
+    /*
+     * #define CASC_GAME_HOTS      0x00010000          // Heroes of the Storm
+#define CASC_GAME_WOW6      0x00020000          // World of Warcraft - Warlords of Draenor
+#define CASC_GAME_DIABLO3   0x00030000          // Diablo 3 since PTR 2.2.0
+#define CASC_GAME_OVERWATCH 0x00040000          // Overwatch since PTR 24919*
+     */
+    internal enum CascGameId
+    {
+        Hots = 0x00010000,
+        Wow6 = 0x00020000,
+        Diablo3 = 0x00030000,
+        Overwatch = 0x00040000,
+    }
+
+    internal static class GameConverterExtensions
+    {
+        private static Dictionary<CascGameId, CascKnownClient> GameClientMap = new Dictionary<CascGameId, CascKnownClient> 
+        {
+            { CascGameId.Hots, CascKnownClient.HeroesOfTheStorm },
+            { CascGameId.Wow6, CascKnownClient.WorldOfWarcraft },
+            { CascGameId.Diablo3, CascKnownClient.Diablo3 },
+            { CascGameId.Overwatch, CascKnownClient.Overwatch },
+        };
+
+        private static Dictionary<CascKnownClient, CascGameId> ClientGameMap = new Dictionary<CascKnownClient, CascGameId>() 
+        {
+            { CascKnownClient.HeroesOfTheStorm, CascGameId.Hots },
+            { CascKnownClient.WorldOfWarcraft, CascGameId.Wow6 },
+            { CascKnownClient.Diablo3, CascGameId.Diablo3 },
+            { CascKnownClient.Overwatch, CascGameId.Overwatch },
+        };
+
+        public static CascKnownClient ToKnownClient(this CascGameId gameId)
+        {
+            CascKnownClient result;
+            if (!GameClientMap.TryGetValue(gameId, out result))
+                result = CascKnownClient.Unknown;
+
+            return result;
+        }
+
+        public static CascGameId ToGameId(this CascKnownClient knownClient)
+        {
+            CascGameId result;
+            if (!ClientGameMap.TryGetValue(knownClient, out result))
+                throw new ArgumentException("Invalid client.");
+
+            return result;
+        }
     }
 
 #pragma warning disable 649
@@ -152,7 +114,7 @@ namespace CascLibSharp.Native
                 Marshal.Copy(new IntPtr(pEncodingKey), encodingKey, 0, 16);
             }
 
-            return new CascFoundFile(fileName, encodingKey, (CascLocales)dwLocaleFlags, dwFileSize);
+            return new CascFoundFile(fileName, szPlainName, encodingKey, (CascLocales)dwLocaleFlags, dwFileSize);
         }
     }
 #pragma warning restore 649
