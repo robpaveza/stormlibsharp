@@ -1,3 +1,8 @@
+*Please note that while I work for Blizzard Entertainment, this project was developed 
+on my personal time before I worked for Blizzard. This project does not constitute an 
+official documentation of the MPQ or CASC storage container formats, nor is it an 
+official mechanism by which to do data-mining. --@robpaveza, 1 Feb. 2016*
+
 StormLibSharp and CascLibSharp
 =============
 
