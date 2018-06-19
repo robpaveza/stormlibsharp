@@ -46,8 +46,10 @@
     <Compile Include="MpqFileStream.cs" />
     <Compile Include="Native\Callbacks.cs" />
     <Compile Include="Native\MpqArchiveSafeHandle.cs" />
+    <Compile Include="Native\MpqCompressionTypeFlags.cs" />
     <Compile Include="Native\MpqFileSafeHandle.cs" />
     <Compile Include="Native\NativeMethods.cs" />
+    <Compile Include="Native\SFileAddFileFlags.cs" />
     <Compile Include="Native\SFileInfoClass.cs" />
     <Compile Include="Native\SFileOpenArchiveFlags.cs" />
     <Compile Include="Native\Win32Methods.cs" />

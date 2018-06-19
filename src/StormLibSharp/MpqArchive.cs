@@ -159,6 +159,14 @@ namespace StormLibSharp
                 throw new Win32Exception();
         }
 
+        public void AddFileFromDiskWithCompression(string filePath, string archiveName, MpqCompressionTypeFlags compressionFlags)
+        {
+            VerifyHandle();
+
+            if(!NativeMethods.SFileAddFileEx(_handle, filePath, archiveName, (uint)SFileAddFileFlags.MPQ_FILE_COMPRESS, (uint)compressionFlags, (uint)compressionFlags))
+                throw new Win32Exception();
+        }
+
         public void Compact(string listfile)
         {
             VerifyHandle();
