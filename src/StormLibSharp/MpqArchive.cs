@@ -72,7 +72,7 @@ namespace StormLibSharp
 
             //if (!NativeMethods.SFileCreateArchive2(filePath, ref create, out _handle))
             //    throw new Win32Exception();
-            if (!NativeMethods.SFileCreateArchive(filePath, (uint)flags, int.MaxValue, out _handle))
+            if (!NativeMethods.SFileCreateArchive(filePath, (uint)flags, (uint)maxFileCount, out _handle))
                 throw new Win32Exception();
         }
 
